@@ -41,14 +41,28 @@ ModUtil.WrapBaseFunction("IsEnemyEligible", function(baseFunc, enemyName, encoun
   return IsUnarmoredWitch( enemyName ) and baseFunc( enemyName, encounter, wave )
 end)
 
-ModUtil.WrapBaseFunction("GenerateEncounter", function(baseFunc, currentRun, room, encounter)
-  if encounter.EnemySet and HasUnarmoredWitch( encounter.EnemySet ) then
-    baseFunc( currentRun, room, encounter )
-  else
-    if room.RoomSetName then
-      encounter.EnemySet = { UnarmoredWitches[room.RoomSetName] }
-    end
-    baseFunc( currentRun, room, encounter )
+local ExcludedRooms = {
+  "B_Boss01",
+  "B_Boss02"
+}
+
+local function IsExcludedRoom( roomName )
+  for _, excludedName in pairs( ExcludedRooms ) do
+    if roomName == excludedName then return true end
   end
+
+  return false
+end
+
+ModUtil.WrapBaseFunction("GenerateEncounter", function(baseFunc, currentRun, room, encounter)
+  local hasWitches = encounter.EnemySet and HasUnarmoredWitch( encounter.EnemySet )
+
+  if (not hasWitches) and
+     (not IsExcludedRoom( room.Name ) ) and
+      room.RoomSetName then
+        encounter.EnemySet = { UnarmoredWitches[room.RoomSetName] }
+  end
+
+  baseFunc( currentRun, room, encounter )
 end)
 
